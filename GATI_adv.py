@@ -1,26 +1,32 @@
-from tkinter import *
-import tkinter as tkinter
+
 import cv2
-import time 
+import argparse
+import time
+import numpy
+import time
 import sys
-from functools import partial
 
-#path=""
-msg=[None]*50
+parser=argparse.ArgumentParser()
+parser.add_argument("-channels","--ch",type=int,default=4,help="give the no of divisions in the video feed screen ")
+arg=vars(parser.parse_args())
+channel=arg["ch"]
+print(channel)
 
-def do():
-	print(channel.get())
+    
+dvrIP='192.168.1.3'
+vid=cv2.VideoCapture('rtsp://admin:admin@123@'+dvrIP+'/Streaming/Channels/01')
+
+height = int(vid.get(3)) 
+width = int(vid.get(4))   
+
 
 def notify(cam):
-	global msg
-	#print("Camera no"+str(cam)+" is not working.")
-	msg[cam]="Camera no"+str(cam)+" is not working."
+    print("Camera no{} is not working.".format(cam))
 
 def ch4dvr():
     global vid
     global width
     global height
-    global msg
 
     x1=int(width/2)
     y1=int(height/2)
@@ -29,7 +35,6 @@ def ch4dvr():
 
     if o_O==False:
         print("DVR is not working...Check Connections")
-        msg[49]="DVR is not working...Check Connections"
     else:    
         gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
 
@@ -51,7 +56,6 @@ def ch8dvr():
     global vid
     global width
     global height
-    global msg
 
     x1=int(width/3)
     x2=int(width*(2/3))
@@ -61,7 +65,7 @@ def ch8dvr():
     o_O,frame=vid.read()
     if o_O==False:
         print("DVR is not working...Check Connections")
-        msg[49]="DVR is not working...Check Connections"
+        
     else:    
         gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
 
@@ -100,7 +104,6 @@ def ch16dvr():
     global vid
     global width
     global height
-    global msg
 
     x1=int(width/4)
     x2=int(width*(2/4))
@@ -112,7 +115,6 @@ def ch16dvr():
     o_O,frame=vid.read()
     if o_O==False:
         print("DVR is not working...Check Connections")
-        msg[49]="DVR is not working...Check Connections"
     else:    
         gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
 
@@ -170,7 +172,6 @@ def ch24dvr():
     global vid
     global width
     global height
-    global msg
 
     x1=int(width/5)
     x2=int(width*(2/5))
@@ -184,7 +185,6 @@ def ch24dvr():
     o_O,frame=vid.read()
     if o_O==False:
         print("DVR is not working...Check Connections")
-        msg[49]="DVR is not working...Check Connections"
     else:    
         gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
 
@@ -268,7 +268,6 @@ def ch32dvr():
     global vid
     global width
     global height
-    global msg
 
     x1=int(width/6)
     x2=int(width*(2/6))
@@ -284,7 +283,6 @@ def ch32dvr():
     o_O,frame=vid.read()
     if o_O==False:
         print("DVR is not working...Check Connections")
-        msg[49]="DVR is not working...Check Connections"
     else:    
         gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
 
@@ -395,7 +393,6 @@ def ch48dvr():
     global vid
     global width
     global height
-    global msg
 
     x1=int(width/7)
     x2=int(width*(2/7))
@@ -413,7 +410,6 @@ def ch48dvr():
     o_O,frame=vid.read()
     if o_O==False:
         print("DVR is not working...Check Connections")
-        msg[49]="DVR is not working...Check Connections"
     else:    
         gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
 
@@ -564,19 +560,7 @@ def ch48dvr():
         if frame1[0]>880:
             notify(1)
 
-def number_of_channels(argument,user,password,dvr):
-    global path
-    global vid
-    global height
-    global width
-    global msg
-
-    msg=[None]*50
-    path='rtsp://'+str(user.get())+':'+str(password.get())+'@'+str(dvr.get())+'/Streaming/Channels/01'
-    vid=cv2.VideoCapture(path)
-    height = int(vid.get(3))
-    width = int(vid.get(4)) 
-
+def number_of_channels(argument):
     switcher = {
         4: ch4dvr,
         8: ch8dvr,
@@ -585,105 +569,7 @@ def number_of_channels(argument,user,password,dvr):
         32: ch32dvr,
         48: ch48dvr,
     }
-
-    func = switcher.get(int(argument.get()), lambda: "DVR is invalid")
+    func = switcher.get(argument, lambda: "DVR is invalid")
     func()
 
-    notif=Frame(root,bd=7,height=100,width=100,relief="groove")
-    heading=Label(notif,text="Notifications",fg="white",bg="black", font = 'Verdana 14 bold').grid(row=0,column=0,columnspan=5,sticky=W+E,pady=20,padx=10)
-    lbl1=Label(notif,text=msg[1]).grid(row=1,column=0)
-    lbl2=Label(notif,text=msg[2]).grid(row=2,column=0)
-    lbl3=Label(notif,text=msg[3]).grid(row=3,column=0)
-    lbl4=Label(notif,text=msg[4]).grid(row=4,column=0)
-    lbl5=Label(notif,text=msg[5]).grid(row=5,column=0)
-    lbl6=Label(notif,text=msg[6]).grid(row=6,column=0)
-    lbl7=Label(notif,text=msg[7]).grid(row=7,column=0)
-    lbl8=Label(notif,text=msg[8]).grid(row=8,column=0)
-    lbl9=Label(notif,text=msg[9]).grid(row=9,column=0)
-    lbl10=Label(notif,text=msg[10]).grid(row=10,column=0)
-    lbl11=Label(notif,text=msg[11]).grid(row=11,column=0)
-    lbl12=Label(notif,text=msg[12]).grid(row=12,column=0)
-    lbl13=Label(notif,text=msg[13]).grid(row=13,column=0)
-    lbl14=Label(notif,text=msg[14]).grid(row=14,column=0)
-    lbl15=Label(notif,text=msg[15]).grid(row=15,column=0)
-    lbl16=Label(notif,text=msg[16]).grid(row=16,column=0)
-    lbl17=Label(notif,text=msg[17]).grid(row=17,column=0)
-    lbl18=Label(notif,text=msg[18]).grid(row=18,column=0)
-    lbl19=Label(notif,text=msg[19]).grid(row=19,column=0)
-    lbl20=Label(notif,text=msg[20]).grid(row=20,column=0)
-    lbl21=Label(notif,text=msg[21]).grid(row=21,column=0)
-    lbl22=Label(notif,text=msg[22]).grid(row=22,column=0)
-    lbl23=Label(notif,text=msg[23]).grid(row=23,column=0)
-    lbl24=Label(notif,text=msg[24]).grid(row=24,column=0)
-    lbl25=Label(notif,text=msg[25]).grid(row=2,column=1)
-    lbl26=Label(notif,text=msg[26]).grid(row=3,column=1)
-    lbl27=Label(notif,text=msg[27]).grid(row=4,column=1)
-    lbl28=Label(notif,text=msg[28]).grid(row=5,column=1)
-    lbl29=Label(notif,text=msg[29]).grid(row=6,column=1)
-    lbl30=Label(notif,text=msg[30]).grid(row=7,column=1)
-    lbl31=Label(notif,text=msg[31]).grid(row=8,column=1)
-    lbl32=Label(notif,text=msg[32]).grid(row=9,column=1)
-    lbl33=Label(notif,text=msg[33]).grid(row=10,column=1)
-    lbl34=Label(notif,text=msg[34]).grid(row=11,column=1)
-    lbl35=Label(notif,text=msg[35]).grid(row=12,column=1)
-    lbl36=Label(notif,text=msg[36]).grid(row=13,column=1)
-    lbl37=Label(notif,text=msg[37]).grid(row=14,column=1)
-    lbl38=Label(notif,text=msg[38]).grid(row=15,column=1)
-    lbl39=Label(notif,text=msg[39]).grid(row=16,column=1)
-    lbl40=Label(notif,text=msg[40]).grid(row=17,column=1)
-    lbl41=Label(notif,text=msg[41]).grid(row=18,column=1)
-    lbl42=Label(notif,text=msg[42]).grid(row=19,column=1)
-    lbl43=Label(notif,text=msg[43]).grid(row=20,column=1)
-    lbl44=Label(notif,text=msg[44]).grid(row=21,column=1)
-    lbl45=Label(notif,text=msg[45]).grid(row=22,column=1)
-    lbl46=Label(notif,text=msg[46]).grid(row=23,column=1)
-    lbl47=Label(notif,text=msg[47]).grid(row=24,column=1)
-    lbl48=Label(notif,text=msg[48]).grid(row=25,column=1)
-    lbl49=Label(notif,text=msg[49]).grid(row=1,column=1)
-    notif.grid(row=0,column=4,rowspan=50)
-
-
-
-root=Tk()
-#root.geometry("1080x720")
-root.title("Camera Monitoring System")
-input=Frame(root, width=100, height=100, bd=10)
-heading=Label(input,text="DVR :",fg="white",bg="black", font = 'Verdana 14 bold').grid(row=0,column=0,columnspan=5,sticky=W+E,pady=10)
-
-dvrlabel=Label(input,text="IP Address ").grid(row=1,column=0,sticky=W)
-dvr=Entry(input)
-dvr.insert(0,"192.168.1.3")
-dvr.grid(row=2,column=0,padx=15,pady=5)
-
-divLabel=Label(input,text="No. of Channels").grid(row=1,column=1,sticky=W)
-channel=Entry(input)
-channel.insert(0,"4")
-channel.grid(row=2,column=1,padx=15,pady=5)
-
-userlabel=Label(input,text="User Name").grid(row=1,column=2,sticky=W)
-user=Entry(input)
-user.insert(0,"admin")
-user.grid(row=2,column=2,padx=15,pady=5)
-
-passlabel=Label(input,text="Password").grid(row=1,column=3,sticky=W)
-password=Entry(input)
-password.insert(0,"admin@123")
-password.grid(row=2,column=3,padx=15,pady=5)
-
-path='rtsp://'+str(user.get())+':'+str(password.get())+'@'+str(dvr.get())+'/Streaming/Channels/01'
-vid=cv2.VideoCapture(path)
-ch=int(channel.get())
-height = int(vid.get(3)) 
-width = int(vid.get(4)) 
-
-btn=Button(input,text="Enter",fg="LightBlue",bg="black",font='Verdana 10',command=partial(number_of_channels,channel,user,password,dvr))
-btn.grid(row=2,column=4,sticky=W+E,padx=5,pady=5)
-input.grid(row=0,column=0,columnspan=3)
-
-
-video=Frame(root)
-vidLabel=Label(video,text="Video Feed Goes Here...").grid(row=0,column=0,columnspan=2)
-
-video.grid(row=1,column=0)
-
-root.mainloop()
+number_of_channels(channel)
