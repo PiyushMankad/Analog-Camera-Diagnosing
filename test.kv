@@ -1,0 +1,16 @@
+<testLayout>:
+	id: demo
+	disp:input
+	display: output
+	rows: 3
+
+
+	TextInput:
+		id: input
+
+	TextInput:
+		id: output
+		
+	Button:
+		text: "click"
+		on_press:demo.show(input.text)
