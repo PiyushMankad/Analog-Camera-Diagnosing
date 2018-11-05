@@ -5,7 +5,7 @@ import cv2
 import time
 import os
 import datetime
-from mail import email
+from mail import email,saveImage
 import subprocess
 import numpy as np
         ### FUNCTIONS ###
@@ -15,6 +15,8 @@ def notify(cam,error_msg,dvrIP):
     error_msg=error_msg+"\n Camera no {} of DVR IP {} is not working".format(str(cam),dvrIP)
     return error_msg
 
+
+# checks if the individual DVR frames are working
 def ch4dvr(frame,dvrIP):
     cams_on=np.array([101,201,301,401])
     (height,width)=frame.shape[:2]
@@ -46,6 +48,8 @@ def ch4dvr(frame,dvrIP):
     email(str(datetime.datetime.now())+error_msg)
     return cams_on
 
+
+# checks if the individual DVR frames are working
 def ch8dvr(frame,dvrIP):
     cams_on=np.array([101,201,301,401,501,601,701,801])
     (height,width)=frame.shape[:2]   
@@ -98,10 +102,65 @@ def ch8dvr(frame,dvrIP):
     email(str(datetime.datetime.now())+error_msg)
     return cams_on
 
+
+# after detecting all the running frames, they are sent for occlusion detection
+def occlusion(path):
+    threshold_percnt=30
+    minContinousFrames=10
+    orig_frame_bool=True
+    feed=cv2.VideoCapture(path)
+    while True():
+        frame=feed.read()
+        frame=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+        (height,width)=frame.shape[:2]
+        orig_frame=np.empty((height,width))
+
+        # the frame saved if continous 10 frame condition is true
+        first_tampered_frame=np.empty((height,width))
+        total_pixel=(height-1)*(width-1)        # total no of pixel comparisons
+        changed_pixel=0                         # no of changed pixels in a frame 
+        tamper_count=0
+
+        #   keeping AN ORIGIONAL FRAME FOR COMPARISON
+        if orig_frame_bool:
+            orig_frame_bool=False
+            orig_frame=frame
+        else:
+
+            for i in range(0,(height-5),5):     
+                #   step seems to take an extra iteration after reaching the limit 
+                for j in range(0,(width-5),5):
+                    #   TAKING A RANGE WHERE THE TAMPERING PIXEL SHOULD FALL
+                    if not frame[i][j] > (orig_frame[i][j]-20) and frame[i][j] < (orig_frame[i][j]+20):
+                        changed_pixel=changed_pixel+1
+
+            #   changed pixels to be greater than 30% of pixels comparisons to be counted as a tampering
+            if changed_pixel>(threshold_percnt/100)*total_pixel:
+                tamper_count=tamper_count+1
+                #   saving the initial frame when tampering started
+                if tamper_count==1:
+                    first_tampered_frame=frame
+            
+            elif changed_pixel==0:
+                #   checking for VIDEO LOOP CONDITION
+                email("Your DVR {} might be stuck in Video LOOP, kindly check it."format(dvrIP))
+
+            else:
+                #continous 10 tampering frames would triger an email otherwise not
+                tamper_count=0
+
+            if tamper_count>minContinousFrames: # ie 10
+                saveImage(first_tampered_frame,frame,dvrIP,cam)
+
+
+
+
+
 def checkDVR(lines):
     ret_val=""
     path=lines[:-1]
-    dvrIP=path[-32:-20]
+    pos=path.find("/Streaming")
+    dvrIP=path[(pos-13):pos]
     path=path+"01"
     '''
     path='rtsp://admin:admin@123@192.168.0.78/Streaming/Channels/01'
@@ -118,14 +177,37 @@ def checkDVR(lines):
             file.write(str(os.getpid())+"\n"+str(datetime.datetime.now())+" DVR of IP {} not working".format(dvrIP)+"\n")
             file.close()
             email(str(datetime.datetime.now())+" DVR of IP {} not working".format(dvrIP)+"\n")
+            
+            # releasing the dvr video and switching it to individual streams
+            try:
+                vid.release()
+            except:
+                print("Video of DVR {} couldnt be released".format(dvrIP))
+            break
+        elif time.time()-startTime>3600: #refreshes every hour
             break
         elif channel==4:
             cams_on=ch4dvr(frame,dvrIP)
+
+            # releasing the dvr video and switching it to individual streams
+            try:
+                vid.release()
+            except:
+                print("Video of DVR {} couldnt be released".format(dvrIP))
+
             for i in range(cams_on.shape[0]):
                 print(str(path[:-2])+str(cams_on[i]))
             break
         elif O_O and channel==8:
             cams_on=ch8dvr(frame,dvrIP)
+
+            # releasing the dvr video and switching it to individual streams
+            try:
+                vid.release()
+            except:
+                print("Video of DVR {} couldnt be released".format(dvrIP))
+            for i in range(cams_on.shape[0]):
+                print(str(path[:-2])+str(cams_on[i]))
             break
         else:
             print("NOTHING")
